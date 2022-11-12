@@ -1,5 +1,4 @@
 #include <BluetoothSerial.h>
-#include <ArduinoJson.h>
 #include <Alfredo_NoU2.h>
 
 BluetoothSerial btSerial;
