@@ -29,7 +29,7 @@ btSerial.listPairedDevices(list => {
         const type = jsonData.device < 7 ? 'm' : 's';
         const output = Math.round(jsonData.data['<speed'] * 100) / 100;
 
-        btSerial.write(Buffer.from(type + jsonData.device + output + '\0'), () => { });
+        btSerial.write(Buffer.from(type + jsonData.device.at(-1) + output + '\0'), () => { });
       });
     });
   });
