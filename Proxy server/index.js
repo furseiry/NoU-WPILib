@@ -3,10 +3,12 @@ const { WebSocketServer } = require('ws');
 const wss = new WebSocketServer({ port: 3300 });
 const btSerial = new (require('node-bluetooth-serial-port').BluetoothSerialPort)();
 
+const ROBOT_NAME = "";
+
 console.log('Starting NoU2-ws');
 
 btSerial.listPairedDevices(list => {
-  const robot = list.find(device => device.name == 'AraAra');
+  const robot = list.find(device => device.name == ROBOT_NAME);
 
   if (!robot) return;
 

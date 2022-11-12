@@ -4,6 +4,8 @@
 
 BluetoothSerial btSerial;
 
+String ROBOT_NAME = "";
+
 NoU_Motor motors[6] = {
   NoU_Motor(1),
   NoU_Motor(2),
@@ -20,27 +22,33 @@ NoU_Servo servos[4] = {
 };
 
 void setup() {
-  Serial.begin(115200);
-  btSerial.begin("AraAra");
+  btSerial.begin(ROBOT_NAME);
 }
 
+// Need to store incoming characters and build each message
 String currentMessage = "";
+
 void loop() {
+  // If there is data on the serial port
   if (btSerial.available()) {
+    // Read one character and store it
     char c = btSerial.read();
     currentMessage += c;
-    Serial.println(c);
+    // Check for message delimiter
     if (c == '\0') {
+      // Parse motor type and port
       char type = currentMessage[0];
+      int port = currentMessage.substring(1, 2).toInt() - 1;
       if (type == 'm') {
-        int motor = currentMessage.substring(1, 2).toInt() - 1;
+        // Calculate output and set motor
         float output = currentMessage.substring(2).toFloat();
-        motors[motor].set(output);
+        motors[port].set(output);
       } else if (type == 's') {
-        int servo = currentMessage.substring(1, 2).toInt() - 1;
+        // Calculate angle and set servo
         float angle = currentMessage.substring(2).toFloat() * 180;
-        servos[servo].write(angle);
+        servos[port].write(angle);
       }
+      // Reset message for next loop
       currentMessage = "";
     }
   }

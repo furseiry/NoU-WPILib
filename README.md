@@ -25,6 +25,7 @@ You should have all of the prerequisites now. If you do not, go download them [n
   - Change the name of your robot at the top of the file. This will be the name of the bluetooth device and should not have any spaces.
   - Upload the code to the ESP32. You should have done this before when testing the NoU2 library.
 - **Setting up the proxy server**
+  - Open `index.js` in a text editor. Change the robot name at the top of the file to the same name you used in the previous step.
   - Open a terminal in the `Proxy server` folder.
   - Run `npm i` to install dependencies.
   - Use `node .` to start the server.
