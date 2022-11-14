@@ -17,20 +17,28 @@ btSerial.listPairedDevices(list => {
   wss.on('connection', ws => {
     console.log('Connected to robot simulator');
 
-    btSerial.connect(robot.address, robot.services[0].channel, () => {
+    const successful_connection = ws => {
       console.log('Connected to robot');
 
       ws.on('message', data => {
         const jsonData = JSON.parse(data);
-
+        
         if (jsonData.type != 'PWM') return;
         if (jsonData.device > 6 && jsonData.device < 11 || jsonData.device < 1 || jsonData.device > 14) return;
-
+        if (jsonData.data['<speed'] == undefined) return;
+        
         const type = jsonData.device < 7 ? 'm' : 's';
         const output = Math.round(jsonData.data['<speed'] * 100) / 100;
 
         btSerial.write(Buffer.from(type + jsonData.device.at(-1) + output + '\0'), () => { });
       });
-    });
+    }
+
+    if (btSerial.isOpen()) {
+      successful_connection(ws);
+      return;
+    }
+
+    btSerial.connect(robot.address, robot.services[0].channel, () => successful_connection(ws));
   });
 });
