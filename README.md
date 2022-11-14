@@ -33,6 +33,7 @@ You should have all of the prerequisites now. If you do not, go download them [n
   - Create a new project for your robot. In Visual Studio Code press `Ctrl+Shift+P` then type `WPILib: Create a new project`.
     - You can use an example if you'd like but I prefer the `Command Robot` template.
   - Replace the contents of the generated `build.gradle` file with the one included here.
+    - You may need to change the version of the `edu.wpi.first.GradleRIO` plugin at the top to match your version of WPILib.
   - `Ctrl+Shift+P` and `WPILib: Simulate Robot Code` will start the robot simulator.
     - Run with all 3 extensions when prompted.
 ## Use
