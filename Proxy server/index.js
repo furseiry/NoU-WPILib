@@ -25,10 +25,12 @@ btSerial.listPairedDevices(list => {
         
         if (jsonData.type != 'PWM') return;
         if (jsonData.device > 6 && jsonData.device < 11 || jsonData.device < 1 || jsonData.device > 14) return;
-        if (jsonData.data['<speed'] == undefined) return;
+        if (!(jsonData.data['<speed'] || jsonData.data['<position'])) return;
         
         const type = jsonData.device < 7 ? 'm' : 's';
-        const output = Math.round(jsonData.data['<speed'] * 100) / 100;
+        const output = Math.round((jsonData.data['<speed'] || jsonData.data['<position']) * 100) / 100;
+
+        console.log(type + jsonData.device.at(-1) + output);
 
         btSerial.write(Buffer.from(type + jsonData.device.at(-1) + output + '\0'), () => { });
       });
