@@ -2,7 +2,7 @@
 WPILib integration with NoU2 motor controller using ESP32
 ## Prerequisites
 - NoU2 library
-  - Follow the instructions from AlredoSystems [here](https://github.com/AlfredoSystems/Alfredo-NoU2).
+  - Follow the instructions from AlfredoSystems [here](https://github.com/AlfredoSystems/Alfredo-NoU2).
     - This should guide you through installing the Arduino IDE if you haven't already, along with configuring it for the ESP32.
 - Node.JS
   - This is needed for running the proxy server.
@@ -49,7 +49,7 @@ wpi.sim.envVar("HALSIMWS_HOST", "127.0.0.1")
 
 If any part of this system changes, all following parts must be restarted as well. 
 ## Programming
-- Copy the NoU2Classes folder into `src/main/java/frc/robot/` wpilib project.
+- Copy the NoU2Classes folder into `src/main/java/frc/robot/` in your wpilib project.
 - Use the provided classes in your code to control motors, servos, and onboard gpio.
   - Reading from gpio does not work yet.
 ## Things I'm working on 
