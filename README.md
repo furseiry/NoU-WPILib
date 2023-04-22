@@ -26,14 +26,19 @@ You should have all of the prerequisites now. If you do not, go download them [n
   - Upload the code to the ESP32. You should have done this before when testing the NoU2 library.
 - **Setting up the proxy server**
   - Open `index.js` in a text editor. Change the robot name at the top of the file to the same name you used in the previous step.
-  - Open a terminal in the `Proxy server` folder.
+  - Open a terminal in the `proxy-server` folder.
   - Run `npm i` to install dependencies.
   - Use `node .` to start the server.
 - **Setting up WPILib**
   - Create a new project for your robot. In Visual Studio Code press `Ctrl+Shift+P` then type `WPILib: Create a new project`.
     - You can use an example if you'd like but I prefer the `Command Robot` template.
-  - Replace the contents of the generated `build.gradle` file with the one included here.
-    - You may need to change the version of the `edu.wpi.first.GradleRIO` plugin at the top to match your version of WPILib.
+  - Add the following code to your build.gradle: 
+```
+wpi.sim.addGui().defaultEnabled = true
+wpi.sim.addWebsocketsServer().defaultEnabled = true
+wpi.sim.addWebsocketsClient().defaultEnabled = true
+wpi.sim.envVar("HALSIMWS_HOST", "127.0.0.1")
+```
   - `Ctrl+Shift+P` and `WPILib: Simulate Robot Code` will start the robot simulator.
     - Run with all 3 extensions when prompted.
 ## Use
@@ -44,12 +49,11 @@ You should have all of the prerequisites now. If you do not, go download them [n
 
 If any part of this system changes, all following parts must be restarted as well. 
 ## Programming
-The NoU2-wpilib software currently only has support for **outputting** to the 6 motor ports and 4 servo ports on the NoU2 motor controller. 
-The classes usd to control motors in WPILib are `Spark` and `Servo` respectively. 
-The motors are on channels 1-6 and the servos are on channels 11-14.
+- Copy the NoU2Classes folder into `src/main/java/frc/robot/` wpilib project.
+- Use the provided classes in your code to control motors, servos, and onboard gpio.
+  - Reading from gpio does not work yet.
 ## Things I'm working on 
-- Add GPIO support.
-- Custom improved classes for motors and servos.
+- Rewriting the entire proxy in rust so I can use a functioning bluetooth library
 - Option to connect over wifi instead of bluetooth.
 
 Contact me on discord @choose42#3361 for questions/help.
