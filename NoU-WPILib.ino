@@ -1,7 +1,7 @@
-#include <BluetoothSerial.h>
+#include <BleSerial.h>
 #include <Alfredo_NoU2.h>
 
-BluetoothSerial btSerial;
+BleSerial btSerial;
 
 String ROBOT_NAME = "";
 
@@ -20,23 +20,30 @@ NoU_Servo servos[4] = {
     NoU_Servo(4),
 };
 
+/* typedef struct {
+  int mode;
+  int pin;
+} pin_config_t;
+
+void sendPinData(void* pinConfig) {
+  pin_config_t* config = (pin_config_t*) pinConfig;
+  while(1) {
+    btSerial.printf("g%d%d%d", 0, digitalRead(2), 1);
+    vTaskDelay(10);
+  }
+} */
+
 void setup()
 {
-  btSerial.begin(ROBOT_NAME);
+  btSerial.begin(ROBOT_NAME.c_str());
 }
-
-String currentMessage = "";
 
 void loop()
 {
-  if (!btSerial.available())
-    return;
+  while (btSerial.available())
+  {
+    String currentMessage = btSerial.readStringUntil('\0');
 
-  char c = btSerial.read();
-  currentMessage += c;
-
-  if (c == '\0')
-  {    
     char type = currentMessage[0];
 
     switch (type)
@@ -67,10 +74,15 @@ void loop()
       int mode = currentMessage.charAt(1) - '0';
       int deviceNum = currentMessage.substring(2).toInt();
       pinMode(deviceNum, mode);
+      /* if (mode == 0 || mode == 2) {
+        pin_config_t config = {
+          .mode = mode,
+          .pin = deviceNum
+        };
+        xTaskCreate(sendPinData, "sendPinData", 32768, &config, 1, NULL);
+      } */
       break;
     }
     }
-
-    currentMessage = "";
   }
 }

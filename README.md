@@ -1,12 +1,15 @@
-# NoU2-wpilib
-WPILib integration with NoU2 motor controller using ESP32
+# NoU-WPILib
+WPILib integration with NoU motor controller using ESP32
+## Features
+- Full support for motors and servos.
+- Partial GPIO support.
+- Automatic reconnecting for minimum hassle.
 ## Prerequisites
 - NoU2 library
   - Follow the instructions from AlfredoSystems [here](https://github.com/AlfredoSystems/Alfredo-NoU2).
     - This should guide you through installing the Arduino IDE if you haven't already, along with configuring it for the ESP32.
-- Node.JS
-  - This is needed for running the proxy server.
-  - Download from their website [here](https://nodejs.org/en/download/). 
+- Cargo
+  - Cargo is a tool for managing compiling and running rust programs. It can be acquired [here](https://www.rust-lang.org/tools/install).
 - WPILib
   - This is how you're going to be programming your robot.
   - Follow the installation guide [here](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html).
@@ -21,17 +24,17 @@ This code has three different parts:
 You should have all of the prerequisites now. If you do not, go download them [now](https://github.com/afredge/NoU2-wpilib#Prerequisites).
 
 - **Setting up the ESP32**
-  - Open `NoU2-wpilib.ino` in the Arduino IDE.
+  - Open `NoU-WPILib.ino` in the Arduino IDE.
   - Change the name of your robot at the top of the file. This will be the name of the bluetooth device and should not have any spaces.
-  - Upload the code to the ESP32. You should have done this before when testing the NoU2 library.
+  - Upload the code to the ESP32. You may have done this before when testing the NoU2 library.
 - **Setting up the proxy server**
-  - Open `index.js` in a text editor. Change the robot name at the top of the file to the same name you used in the previous step.
+  - Open `main.rs` in a text editor. Change the robot name at the top of the file to the same name you used in the previous step.
   - Open a terminal in the `proxy-server` folder.
-  - Run `npm i` to install dependencies.
-  - Use `node .` to start the server.
+  - Run `cargo run` to install dependencies automatically and start the server.
 - **Setting up WPILib**
   - Create a new project for your robot. In Visual Studio Code press `Ctrl+Shift+P` then type `WPILib: Create a new project`.
-    - You can use an example if you'd like but I prefer the `Command Robot` template.
+    - Currently the library only has java support.
+    - Whether you use an example or a template doesn't really matter. Just stick with the ones designed for regular robots.
   - Add the following code to your build.gradle: 
 ```
 wpi.sim.addGui().defaultEnabled = true
@@ -39,21 +42,29 @@ wpi.sim.addWebsocketsServer().defaultEnabled = true
 wpi.sim.addWebsocketsClient().defaultEnabled = true
 wpi.sim.envVar("HALSIMWS_HOST", "127.0.0.1")
 ```
-  - `Ctrl+Shift+P` and `WPILib: Simulate Robot Code` will start the robot simulator.
+  - Pressing `Ctrl+Shift+P` and selecting `WPILib: Simulate Robot Code` will start the robot simulator.
     - Run with all 3 extensions when prompted.
+  - Alternatively you can press `F5`.
 ## Use
-1. Connect to robot over bluetooth.
-    - You will only have to do this once, or if you change the name of your robot.
-2. Start the proxy server.
-3. Start robot simulator.
+1. Start the proxy server.
+2. Start robot simulator.
+- Power on the robot at some point
 
-If any part of this system changes, all following parts must be restarted as well. 
+If the proxy server stops the robot simulator must also be restarted. 
 ## Programming
-- Copy the NoU2Classes folder into `src/main/java/frc/robot/` in your wpilib project.
-- Use the provided classes in your code to control motors, servos, and onboard gpio.
-  - Reading from gpio does not work yet.
+- In your WPILib project press `Ctrl+Shift+P` and type `WPILib: Manage Vendor Libraries`
+- Select `Install new libraries (online)`
+- Enter this link: `https://furseiry.github.io/NoULib/NoULib.json`
+  - If this doesn't work, try going to the link in your browser, then copy & paste the contents there to a new file called `NoULib.json` in the `vendordeps` folder of your WPILib project.
+- It will suggest running a build. Do this so WPILib downloads the library.
+  - If you added the file manually, `Ctrl+Shift+P` -> `WPILib: Build Robot Code` will do it.
+- Use the provided `NoUMotor`, `NoUServo`, and `NoUGPIO` classes to program your robot! 
 ## Things I'm working on 
-- Rewriting the entire proxy in rust so I can use a functioning bluetooth library
+- Read gpio pins correctly
+- cpp WPILib classes
+- Precompiled binaries so cargo doesn't have to be used.
+- Proxy auto starting
 - Option to connect over wifi instead of bluetooth.
+- I had a silly idea for integrating the proxy into the vendordep.
 
-Contact me on discord @choose42#3361 for questions/help.
+Contact me on discord @choose42#7347 for questions/help.
