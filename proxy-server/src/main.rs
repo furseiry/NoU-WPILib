@@ -1,3 +1,4 @@
+use std::env;
 use std::error::Error;
 use std::io;
 use std::net::{TcpListener, TcpStream};
@@ -14,13 +15,17 @@ use crate::parsing::*;
 
 mod parsing;
 
-const ROBOT_NAME: &'static str = "";
+fn get_robot_name() -> String {
+    let mut args = env::args();
+    args.nth(1).expect("Enter a robot name")
+}
 
 fn get_robot_address() -> Result<Pin<Box<Peripheral>>, simplersble::Error> {
+    let robot_name = get_robot_name();
     let (scan_sender, scan_receiver) = mpsc::sync_channel(1);
     let mut adapter = Adapter::get_adapters()?.swap_remove(0);
     adapter.set_callback_on_scan_found(Box::new(move |peripheral| {
-        if &peripheral.identifier().unwrap() == ROBOT_NAME {
+        if peripheral.identifier().unwrap() == get_robot_name() {
             scan_sender.send(()).unwrap();
         }
     }));
@@ -31,7 +36,7 @@ fn get_robot_address() -> Result<Pin<Box<Peripheral>>, simplersble::Error> {
     let results = adapter.scan_get_results()?;
 
     for peripheral in results {
-        if peripheral.identifier()? == ROBOT_NAME {
+        if peripheral.identifier()? == robot_name {
             return Ok(peripheral);
         }
     }
@@ -59,7 +64,7 @@ fn start_bluetooth(
 
     println!("Connected to robot.");
 
-    let (notify_sender, notify_receiver) = mpsc::sync_channel(1 << 15);
+    let (notify_sender, notify_receiver) = mpsc::sync_channel(1);
     robot_bt.notify(
         &service,
         &read_characteristic,

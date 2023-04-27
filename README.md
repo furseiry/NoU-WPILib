@@ -4,12 +4,12 @@ WPILib integration with NoU motor controller using ESP32
 - Full support for motors and servos.
 - Partial GPIO support.
 - Automatic reconnecting for minimum hassle.
+## Disclaimer
+- I do not know much about Windows so these instructions may not be 100% accurate. I'm working on this.
 ## Prerequisites
 - NoU2 library
   - Follow the instructions from AlfredoSystems [here](https://github.com/AlfredoSystems/Alfredo-NoU2).
     - This should guide you through installing the Arduino IDE if you haven't already, along with configuring it for the ESP32.
-- Cargo
-  - Cargo is a tool for managing compiling and running rust programs. It can be acquired [here](https://www.rust-lang.org/tools/install).
 - WPILib
   - This is how you're going to be programming your robot.
   - Follow the installation guide [here](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html).
@@ -28,9 +28,21 @@ You should have all of the prerequisites now. If you do not, go download them [n
   - Change the name of your robot at the top of the file. This will be the name of the bluetooth device and should not have any spaces.
   - Upload the code to the ESP32. You may have done this before when testing the NoU2 library.
 - **Setting up the proxy server**
-  - Open `main.rs` in a text editor. Change the robot name at the top of the file to the same name you used in the previous step.
-  - Open a terminal in the `proxy-server` folder.
-  - Run `cargo run` to install dependencies automatically and start the server.
+  - Using a precompiled binary:
+    - On this GitHub repository navigate to `Actions`
+    - Click the most recent one
+    - Scroll down to `Artifacts` (scrolling in the main box doesn't work very well, keep your mouse to the left of your screen).
+    - Download the artifact corresponding to your operating system.
+    - Unzip the downloaded file wherever you like.
+    - To start the proxy:
+      - Open a terminal in the folder you unzipped `proxy-server` to.
+      - Type `./proxy-server` followed by a space and then your robot's name.
+        - You may need to run `chmod 755 proxy-server` once before attempting to start the proxy. 
+  - Compiling from source:
+    - Install [Cargo](https://www.rust-lang.org/tools/install).
+    - Open a terminal in the `proxy-server` folder.
+    - Run `cargo run` followed by a space and then your robot's name.
+
 - **Setting up WPILib**
   - Create a new project for your robot. In Visual Studio Code press `Ctrl+Shift+P` then type `WPILib: Create a new project`.
     - Currently the library only has java support.
@@ -60,9 +72,10 @@ If the proxy server stops the robot simulator must also be restarted.
   - If you added the file manually, `Ctrl+Shift+P` -> `WPILib: Build Robot Code` will do it.
 - Use the provided `NoUMotor`, `NoUServo`, and `NoUGPIO` classes to program your robot! 
 ## Things I'm working on 
+###### (Vaguely in order of priority)
+- Better cross platform documentation.
 - Read gpio pins correctly
 - cpp WPILib classes
-- Precompiled binaries so cargo doesn't have to be used.
 - Proxy auto starting
 - Option to connect over wifi instead of bluetooth.
 - I had a silly idea for integrating the proxy into the vendordep.

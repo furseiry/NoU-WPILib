@@ -1,6 +1,7 @@
 name: Rust
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
   pull_request:
@@ -13,12 +14,31 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [macOS-latest, macos-10.15, windows-latest, ubuntu-latest]
         
     runs-on: ${{ matrix.os }}
 
     steps:
+    - run: sudo apt-get install -y libdbus-1-dev
+      if: matrix.os == 'ubuntu-latest'
     - uses: actions/checkout@v3
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ./proxy-server/target
+          ./proxy-server/Cargo.lock
+        key: ${{ matrix.os }}
     - name: Build
-      run: cargo build --verbose --release
-      
+      run: cargo build --release
+      working-directory: proxy-server
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}
+        path: ./proxy-server/target/release/proxy-server
+        if-no-files-found: ignore
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}
+        path: .\proxy-server\target\release\proxy-server.exe
+        if-no-files-found: ignore
