@@ -24,7 +24,7 @@ fn get_robot_address() -> Result<Pin<Box<Peripheral>>, simplersble::Error> {
     let robot_name = get_robot_name();
     let (scan_sender, scan_receiver) = mpsc::sync_channel(1);
     let mut adapter = Adapter::get_adapters()?.swap_remove(0);
-    adapter.set_callback_on_scan_found(Box::new(move |peripheral| {
+    adapter.set_callback_on_scan_updated(Box::new(move |peripheral| {
         if peripheral.identifier().unwrap() == get_robot_name() {
             scan_sender.send(()).unwrap();
         }
@@ -53,20 +53,36 @@ fn start_bluetooth(
     let mut robot_bt = get_robot_address()?;
 
     println!("\nFound robot: {}", robot_bt.identifier()?);
+    println!("Connecting to robot.");
 
     robot_bt.connect()?;
-    let services = robot_bt.services()?;
-    let characteristics = services[0].characteristics();
 
-    let service = services[0].uuid();
-    let write_characteristic = characteristics[0].uuid();
-    let read_characteristic = characteristics[1].uuid();
+    let services = robot_bt.services()?;
+    let (mut write_service, mut write_characteristic) = (String::new(), String::new());
+    let (mut read_service, mut read_characteristic) = (String::new(), String::new());
+
+    for service in services {
+        for characteristic in service.characteristics() {
+            let c1 = characteristic.uuid();
+            let c2 = characteristic.capabilities();
+            println!("\t{c1}");
+            println!("{c2:?}");
+            if characteristic.can_write_request() {
+                write_service = service.uuid();
+                write_characteristic = characteristic.uuid();
+            }
+            if characteristic.can_notify() {
+                read_service = service.uuid();
+                read_characteristic = characteristic.uuid();
+            }
+        }
+    }
 
     println!("Connected to robot.");
 
     let (notify_sender, notify_receiver) = mpsc::sync_channel(1);
     robot_bt.notify(
-        &service,
+        &read_service,
         &read_characteristic,
         Box::new(move |data| {
             notify_sender.send(parse_robot_to_sim(data)).unwrap();
@@ -84,7 +100,7 @@ fn start_bluetooth(
         }
 
         if let Ok(Some(message)) = receiver_from_sim.try_recv() {
-            if let Err(err) = robot_bt.write_request(&service, &write_characteristic, &message) {
+            if let Err(err) = robot_bt.write_request(&write_service, &write_characteristic, &message) {
                 eprintln!("Lost connection to robot: {err}");
                 break;
             }

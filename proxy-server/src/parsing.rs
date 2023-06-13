@@ -46,11 +46,15 @@ pub fn parse_sim_to_robot(data: String) -> Option<Vec<u8>> {
                 }
             }
             "GPIOPrep" => {
-                let mode = json_data["data"]["<mode"].as_u64().unwrap();
-                format!("p{num}{mode}\0")
+                if let Some(mode) = read_field_u64(&json_data["data"], "mode") {
+                    format!("p{mode}{num}\0")
+                } else {
+                    return None;
+                }
             }
             _ => unreachable!(),
         };
+        println!("{message}");
         Some(message.as_bytes().to_vec())
     } else {
         None

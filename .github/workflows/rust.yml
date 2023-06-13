@@ -12,10 +12,8 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macOS-latest, macos-10.15, windows-latest, ubuntu-latest]
-        
+        os: [macOS-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
-
     steps:
     - run: sudo apt-get install -y libdbus-1-dev
       if: matrix.os == 'ubuntu-latest'

@@ -50,7 +50,7 @@ You should have all of the prerequisites now. If you do not, go download them [h
     - In VSCode (which will be downloaded by the installer), Open the Command Palette by clicking the little WPILib icon in the top right (shortcut `Cmd+Shift+P` (Mac) / `Ctrl+Shift+P` (Windows))
     - Type `WPILib: Create a new project`. This opens the WPILib Project Creator.
     - Select a project type. Templates work better, but you can try modifying the examples if you want.
-    - Select a language (currently this software only has java support)
+    - Select a language (currently this software only has java support) (so you should select that)
     - Select a project base:
       - Templates that work the best: Command Robot, Command Robot Skeleton, Timed Robot, Timed Skeleton, RobotBase Skeleton
     - Fill in the rest of the fields and `Generate Project`.
@@ -85,11 +85,12 @@ If the proxy server is restarted for any reason, the robot simulator will also n
  
 ## Things I'm working on 
 <sup><sup>(Vaguely in order of priority)
-- Better cross platform documentation
 - Read gpio pins
+- More efficient message sending
+- Connect to robot simulator when proxy starts
 - c++ WPILib classes
 - Proxy auto starting
 - Option to connect over wifi instead of bluetooth.
 - I had a silly idea for integrating the proxy into the vendordep.
 
-Contact me on discord @choose42#7347 for questions/help.
+Contact me on discord @choose42 for questions/help.
