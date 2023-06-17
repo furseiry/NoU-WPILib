@@ -1,4 +1,6 @@
-use std::env;
+use std::collections::HashSet;
+use std::time::{Instant, Duration};
+use std::{env, time};
 use std::error::Error;
 use std::io;
 use std::net::{TcpListener, TcpStream};
@@ -63,10 +65,6 @@ fn start_bluetooth(
 
     for service in services {
         for characteristic in service.characteristics() {
-            let c1 = characteristic.uuid();
-            let c2 = characteristic.capabilities();
-            println!("\t{c1}");
-            println!("{c2:?}");
             if characteristic.can_write_request() {
                 write_service = service.uuid();
                 write_characteristic = characteristic.uuid();
@@ -119,6 +117,37 @@ fn listen_for_robot_bt(
     }
 }
 
+struct MessageCache {
+    messages: Vec<String>
+}
+
+impl MessageCache {
+    fn create() -> Self {
+        Self {messages: vec![]}
+    }
+
+    fn append(&mut self, message: Option<String>) {
+        if let Some(msg) = message {
+            self.messages.push(msg);
+        }
+    }
+
+    fn build_message(&mut self) -> Option<Vec<u8>> {
+        if self.messages.len() == 0 {
+            return None
+        }
+        let mut res = String::from("@"); // some starting character
+        res += &self.messages.remove(0);
+        for val in &self.messages {
+            res += "$"; // some delimeter
+            res += val;
+        }
+        res += "|"; // some ending character
+        self.messages = vec![];
+        Some(res.into_bytes())
+    }
+}
+
 fn start_websocket(
     stream: TcpStream,
     sender_to_bt: &Sender<Option<Vec<u8>>>,
@@ -132,6 +161,9 @@ fn start_websocket(
 
     println!("Connected to robot simulator.");
 
+    let mut message_cache = MessageCache::create();
+    let mut time = Instant::now();
+
     loop {
         if !robot_sim_ws.can_read() || !robot_sim_ws.can_write() {
             eprintln!("Connection to robot simulator lost.");
@@ -139,7 +171,11 @@ fn start_websocket(
         }
 
         if let Ok(Text(message)) = robot_sim_ws.read_message() {
-            sender_to_bt.send(parse_sim_to_robot(message)).unwrap();
+            message_cache.append(parse_sim_to_robot(message));
+            if time.elapsed() > Duration::from_millis(16) {
+                time = Instant::now();
+                sender_to_bt.send(message_cache.build_message()).unwrap();
+            }
         }
 
         if let Ok(Some(message)) = receiver_from_bt.try_recv() {

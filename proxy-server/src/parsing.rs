@@ -12,9 +12,9 @@ fn read_field_u64(data: &Value, field: &str) -> Option<u64> {
     wo.or(rw)
 }
 
-pub fn parse_sim_to_robot(data: String) -> Option<Vec<u8>> {
+pub fn parse_sim_to_robot(data: String) -> Option<String> {
+    
     let json_data: Value = serde_json::from_str(&data).unwrap();
-
     if let Some("SimDevice") = json_data["type"].as_str() {
         let (device, mut num) = json_data["device"]
             .as_str()
@@ -26,36 +26,35 @@ pub fn parse_sim_to_robot(data: String) -> Option<Vec<u8>> {
         let message = match device {
             "NoUMotor" => {
                 if let Some(speed) = read_field_f64(&json_data["data"], "speed") {
-                    format!("m{num}{speed}\0")
+                    format!("m{num}{speed}")
                 } else {
                     return None;
                 }
             }
             "NoUServo" => {
                 if let Some(angle) = read_field_f64(&json_data["data"], "angle") {
-                    format!("s{num}{angle}\0")
+                    format!("s{num}{angle}")
                 } else {
                     return None;
                 }
             }
             "NoUGPIO" => {
                 if let Some(value) = read_field_u64(&json_data["data"], "value") {
-                    format!("g{value}{num}\0")
+                    format!("g{value}{num}")
                 } else {
                     return None;
                 }
             }
             "GPIOPrep" => {
                 if let Some(mode) = read_field_u64(&json_data["data"], "mode") {
-                    format!("p{mode}{num}\0")
+                    format!("p{mode}{num}")
                 } else {
                     return None;
                 }
             }
             _ => unreachable!(),
         };
-        println!("{message}");
-        Some(message.as_bytes().to_vec())
+        Some(message)
     } else {
         None
     }
