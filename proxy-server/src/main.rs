@@ -1,6 +1,5 @@
-use std::collections::HashSet;
 use std::time::{Instant, Duration};
-use std::{env, time};
+use std::env;
 use std::error::Error;
 use std::io;
 use std::net::{TcpListener, TcpStream};
@@ -27,6 +26,7 @@ fn get_robot_address() -> Result<Pin<Box<Peripheral>>, simplersble::Error> {
     let (scan_sender, scan_receiver) = mpsc::sync_channel(1);
     let mut adapter = Adapter::get_adapters()?.swap_remove(0);
     adapter.set_callback_on_scan_updated(Box::new(move |peripheral| {
+        println!("{} {}", peripheral.identifier().unwrap(), peripheral.address().unwrap());
         if peripheral.identifier().unwrap() == get_robot_name() {
             scan_sender.send(()).unwrap();
         }
@@ -117,37 +117,6 @@ fn listen_for_robot_bt(
     }
 }
 
-struct MessageCache {
-    messages: Vec<String>
-}
-
-impl MessageCache {
-    fn create() -> Self {
-        Self {messages: vec![]}
-    }
-
-    fn append(&mut self, message: Option<String>) {
-        if let Some(msg) = message {
-            self.messages.push(msg);
-        }
-    }
-
-    fn build_message(&mut self) -> Option<Vec<u8>> {
-        if self.messages.len() == 0 {
-            return None
-        }
-        let mut res = String::from("@"); // some starting character
-        res += &self.messages.remove(0);
-        for val in &self.messages {
-            res += "$"; // some delimeter
-            res += val;
-        }
-        res += "|"; // some ending character
-        self.messages = vec![];
-        Some(res.into_bytes())
-    }
-}
-
 fn start_websocket(
     stream: TcpStream,
     sender_to_bt: &Sender<Option<Vec<u8>>>,
@@ -161,8 +130,7 @@ fn start_websocket(
 
     println!("Connected to robot simulator.");
 
-    let mut message_cache = MessageCache::create();
-    let mut time = Instant::now();
+    let mut timer = Instant::now();
 
     loop {
         if !robot_sim_ws.can_read() || !robot_sim_ws.can_write() {
@@ -171,10 +139,12 @@ fn start_websocket(
         }
 
         if let Ok(Text(message)) = robot_sim_ws.read_message() {
-            message_cache.append(parse_sim_to_robot(message));
-            if time.elapsed() > Duration::from_millis(16) {
-                time = Instant::now();
-                sender_to_bt.send(message_cache.build_message()).unwrap();
+            parse_sim_to_robot(message);
+            if timer.elapsed() > Duration::from_millis(50) {
+                timer = Instant::now();
+                let builder_ref = PacketBuilder::get_builder_ref();
+                let packet_builder = builder_ref.as_ref();
+                sender_to_bt.send(packet_builder.build_message()).unwrap();
             }
         }
 
