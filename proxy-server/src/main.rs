@@ -26,7 +26,6 @@ fn get_robot_address() -> Result<Pin<Box<Peripheral>>, simplersble::Error> {
     let (scan_sender, scan_receiver) = mpsc::sync_channel(1);
     let mut adapter = Adapter::get_adapters()?.swap_remove(0);
     adapter.set_callback_on_scan_updated(Box::new(move |peripheral| {
-        println!("{} {}", peripheral.identifier().unwrap(), peripheral.address().unwrap());
         if peripheral.identifier().unwrap() == get_robot_name() {
             scan_sender.send(()).unwrap();
         }
@@ -140,7 +139,7 @@ fn start_websocket(
 
         if let Ok(Text(message)) = robot_sim_ws.read_message() {
             parse_sim_to_robot(message);
-            if timer.elapsed() > Duration::from_millis(50) {
+            if timer.elapsed() > Duration::from_millis(150) {
                 timer = Instant::now();
                 let builder_ref = PacketBuilder::get_builder_ref();
                 let packet_builder = builder_ref.as_ref();
@@ -161,10 +160,21 @@ fn listen_for_robot_sim(
     sender_to_bt: Sender<Option<Vec<u8>>>,
     receiver_from_bt: Receiver<Option<String>>,
 ) -> Result<(), io::Error> {
-    let listener = TcpListener::bind("127.0.0.1:3300").unwrap();
     loop {
+        let listener = TcpListener::bind("127.0.0.1:3300").unwrap();
+        listener.set_nonblocking(true)?;
         println!("Waiting for robot simulator.");
-        start_websocket(listener.accept()?.0, &sender_to_bt, &receiver_from_bt);
+        loop {
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(s) => {
+                        thread::sleep(Duration::from_millis(50));
+                        start_websocket(s, &sender_to_bt, &receiver_from_bt);
+                    },
+                    _ => ()
+                }
+            }
+        }
     }
 }
 

@@ -84,7 +84,7 @@ pub fn parse_sim_to_robot(data: String) -> () {
             }
             "NoUServo" => {
                 let angle = read_field_f64(&json_data["data"], "angle").unwrap();
-                packet_builder.update(Device::Servo(num), (angle) as i8);
+                packet_builder.update(Device::Servo(num), (angle * 127./180.) as i8);
             }
             "NoUGPIO" => {
                 let value = read_field_u64(&json_data["data"], "value").unwrap_or_default();

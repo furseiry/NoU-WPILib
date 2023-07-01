@@ -73,13 +73,13 @@ void loop()
       case 'm':
       {
         float speed = value * 0.01;
-        motors[port].set(speed);
+        motors[port - 1].set(speed);
         break;
       }
       case 's':
       {
-        float angle = value * 0.0055;
-        servos[port].write(angle);
+        float angle = value * 1.41;
+        servos[port - 1].write(angle);
         break;
       }
       case 'g':
