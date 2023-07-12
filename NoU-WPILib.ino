@@ -1,9 +1,10 @@
 #include <BleSerial.h>
 #include <Alfredo_NoU2.h>
+#include <esp_log.h>
 
 BleSerial btSerial;
 
-String ROBOT_NAME = "";
+String ROBOT_NAME = "twink";
 
 NoU_Motor motors[6] = {
     NoU_Motor(1),
@@ -35,54 +36,59 @@ void sendPinData(void* pinConfig) {
 
 void setup()
 {
-  btSerial.begin(ROBOT_NAME.c_str());
+  Serial.begin(115200);
+  btSerial.begin(ROBOT_NAME.c_str(), true, 2);
+  Serial.println(ROBOT_NAME);
 }
 
 void loop()
 {
   while (btSerial.available())
   {
-    String currentMessage = btSerial.readStringUntil('\0');
+    String packet = btSerial.readStringUntil('\0');
+    Serial.println(packet);
 
-    char type = currentMessage[0];
+    int lastIndex = 0;
+    int deviceIndex = packet.indexOf('\n', lastIndex);
+    Serial.println(deviceIndex);
+    while (deviceIndex != -1) {
+      String deviceMessage = packet.substring(lastIndex, deviceIndex);
+      Serial.println("\t" + deviceMessage);
 
-    switch (type)
-    {
-    case 'm':
-    {
-      float speed = currentMessage.substring(2).toFloat();
-      int deviceNum = currentMessage[1] - '1';
-      motors[deviceNum].set(speed);
-      break;
-    }
-    case 's':
-    {
-      float angle = currentMessage.substring(2).toFloat();
-      int deviceNum = currentMessage[1] - '1';
-      servos[deviceNum].write(angle);
-      break;
-    }
-    case 'g':
-    {
-      int value = currentMessage.charAt(1) - '0';
-      int deviceNum = currentMessage.substring(2).toInt();
-      digitalWrite(deviceNum, value);
-      break;
-    }
-    case 'p':
-    {
-      int mode = currentMessage.charAt(1) - '0';
-      int deviceNum = currentMessage.substring(2).toInt();
-      pinMode(deviceNum, mode);
-      /* if (mode == 0 || mode == 2) {
-        pin_config_t config = {
-          .mode = mode,
-          .pin = deviceNum
-        };
-        xTaskCreate(sendPinData, "sendPinData", 32768, &config, 1, NULL);
-      } */
-      break;
-    }
+      lastIndex = deviceIndex + 1;
+      deviceIndex = packet.indexOf('\n', lastIndex);
+    Serial.println(deviceIndex);
+
+
+      char type = deviceMessage[0];
+
+      int port = deviceMessage.substring(1,3).toInt();
+
+      int value = deviceMessage.substring(3).toInt();
+
+      Serial.printf("Type:%c, Port:%i, Value:%i\n", type, port, value);
+
+      switch (type)
+      {
+      case 'm':
+      {
+        float speed = value * 0.01;
+        motors[port - 1].set(speed);
+        break;
+      }
+      case 's':
+      {
+        float angle = value * 1.41;
+        servos[port - 1].write(angle);
+        break;
+      }
+      case 'g':
+      {
+        pinMode(port, 3);
+        digitalWrite(port, value);
+        break;
+      }
+      }
     }
   }
 }

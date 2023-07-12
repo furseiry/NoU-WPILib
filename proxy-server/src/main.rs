@@ -1,3 +1,4 @@
+use std::time::{Instant, Duration};
 use std::env;
 use std::error::Error;
 use std::io;
@@ -63,10 +64,6 @@ fn start_bluetooth(
 
     for service in services {
         for characteristic in service.characteristics() {
-            let c1 = characteristic.uuid();
-            let c2 = characteristic.capabilities();
-            println!("\t{c1}");
-            println!("{c2:?}");
             if characteristic.can_write_request() {
                 write_service = service.uuid();
                 write_characteristic = characteristic.uuid();
@@ -132,6 +129,8 @@ fn start_websocket(
 
     println!("Connected to robot simulator.");
 
+    let mut timer = Instant::now();
+
     loop {
         if !robot_sim_ws.can_read() || !robot_sim_ws.can_write() {
             eprintln!("Connection to robot simulator lost.");
@@ -139,7 +138,13 @@ fn start_websocket(
         }
 
         if let Ok(Text(message)) = robot_sim_ws.read_message() {
-            sender_to_bt.send(parse_sim_to_robot(message)).unwrap();
+            parse_sim_to_robot(message);
+            if timer.elapsed() > Duration::from_millis(150) {
+                timer = Instant::now();
+                let builder_ref = PacketBuilder::get_builder_ref();
+                let packet_builder = builder_ref.as_ref();
+                sender_to_bt.send(packet_builder.build_message()).unwrap();
+            }
         }
 
         if let Ok(Some(message)) = receiver_from_bt.try_recv() {
@@ -155,10 +160,21 @@ fn listen_for_robot_sim(
     sender_to_bt: Sender<Option<Vec<u8>>>,
     receiver_from_bt: Receiver<Option<String>>,
 ) -> Result<(), io::Error> {
-    let listener = TcpListener::bind("127.0.0.1:3300").unwrap();
     loop {
+        let listener = TcpListener::bind("127.0.0.1:3300").unwrap();
+        listener.set_nonblocking(true)?;
         println!("Waiting for robot simulator.");
-        start_websocket(listener.accept()?.0, &sender_to_bt, &receiver_from_bt);
+        loop {
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(s) => {
+                        thread::sleep(Duration::from_millis(50));
+                        start_websocket(s, &sender_to_bt, &receiver_from_bt);
+                    },
+                    _ => ()
+                }
+            }
+        }
     }
 }
 
